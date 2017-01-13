@@ -2,53 +2,48 @@
 var config = require('./config/config');
 var rp = require('request-promise');
 var restify = require('restify');
-var options = {
-  'auth': {
-    'sendImmediately': true
-  }
-};
+var geolocate = require('ip-geolocate');
+var ip;
 
 var server = restify.createServer();
-
-server.use(restify.authorizationParser());
 server.use(restify.acceptParser(server.acceptable));
 
 server.use(function (req, res, next) {
-  console.log('Got request for ' + req.url);
-  console.log('Auth: ', req.authorization);
+  ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
-  if (req.authorization && req.authorization.basic) {
-    options.auth.user = req.authorization.basic.username;
-    options.auth.pass = req.authorization.basic.password;
-    return next();
-  } else {
-    res.send(401);
-  }
+  console.log(`Got request from ${ip} for ${req.url}.`);
+  next();
 });
 
-server.post(/ValidateAddress/i, validateAddress);
-
-server.get('/', function (req, res, next) {
-  // console.log(req);
-  authCheck(req, res, next);
-});
-
+server.get('/', hello);
+server.get('/location', getLocation);
+server.get('/address/:phone', getProvisionedAddress);
+server.post('/address', provisionAddress);
 
 server.listen(config.port, function () {
   console.log('Listening on ', config.port);
 });
 
-function validateAddress(req, res, next) {
-  res.send('Not Yet Implemented.');
+function hello(req, res, next) {
+  res.send('Hello - Your service is working.');
+  next();
 }
 
-function authCheck(req, res, next) {
-  rp.get(config.dash.url + 'authenticationcheck ', options)
+function getLocation(req, res, next) {
+  rp.get('https://api.ipify.org')
     .then(function (response) {
-      console.log('Response: ', response);
-      // res.writeHead(200, { 'Content-Type': 'text/xml' });
-      res.send(response);
-      next();
+      geolocate.getLocation(response, function (err, location) {
+        if (err) {
+          // Error occurred, latency threshold hit, or IP address is invalid 
+          console.log(err);
+          res.err(err);
+        }
+        else {
+          // Success 
+          console.log(location);
+          res.send(location);
+        }
+      });
     })
     .catch(function (err) {
       // API call failed... 
@@ -56,4 +51,13 @@ function authCheck(req, res, next) {
       res.writeHead(400, { 'Content-Type': 'text/plain' });
       res.end(err);
     });
+}
+
+function getProvisionedAddress(req, res, next) {
+  res.send({'status': 'Not working yet.'});
+}
+
+function provisionAddress(req, res, next) {
+  console.log(`Provisioning ${req.body}`);
+  next();
 }
