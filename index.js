@@ -47,7 +47,7 @@ function getLocation(req, res, next) {
           if (err) {
             // Error occurred, latency threshold hit, or IP address is invalid 
             console.log(err);
-            res.err(err);
+            res.send(err);
           }
           else {
             // Success 
@@ -67,7 +67,7 @@ function getLocation(req, res, next) {
       if (err) {
         // Error occurred, latency threshold hit, or IP address is invalid 
         console.log(err);
-        res.err(err);
+        res.send(err);
       }
       else {
         // Success 
@@ -90,7 +90,7 @@ function provisionAddress(req, res, next) {
   console.log(`Provisioning ${address} for ${address.phone}.`);
   validateAddress(address, function (err, response) {
     if (err) {
-      res.err(err);
+      res.send(err);
     } else {
       response.phone = req.params.phone;
       db.insert(response, function (err, newDoc) {
