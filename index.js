@@ -5,6 +5,11 @@ var restify = require('restify');
 var geolocate = require('ip-geolocate');
 var ip;
 
+var addressValidator = require('address-validator');
+addressValidator.setOptions({ key: 'AIzaSyAP0ZPfHRURoWicse4fzfvGhbQTo8ALok0' });
+
+var _ = require('lodash');
+
 // Persistent datastore with automatic loading
 var Datastore = require('nedb')
   , db = new Datastore({ filename: config.app.data, autoload: true });
@@ -60,16 +65,57 @@ function getLocation(req, res, next) {
 
 function getProvisionedAddress(req, res, next) {
   console.log(`Looking for the provisioned address ${req.params.phone}.`);
-  db.findOne({'phone': req.params.phone}, function(err, doc) {
-    res.send (err || doc);
+  db.findOne({ 'phone': req.params.phone }, function (err, doc) {
+    res.send(err || doc);
   });
 }
 
 function provisionAddress(req, res, next) {
   var address = req.body;
   console.log(`Provisioning ${address} for ${address.phone}.`);
-  address.phone = req.params.phone;
-  db.insert(address, function (err, newDoc) {
-    res.send(err || newDoc);
+  validateAddress(address, function (err, response) {
+    if (err) {
+      res.err(err);
+    } else {
+      response.phone = req.params.phone;
+      db.insert(response, function (err, newDoc) {
+        res.send(err || newDoc);
+      });
+    }
   });
+}
+
+function validateAddress(address, cb) {
+  var addr = new addressValidator.Address(address);
+  addressValidator.validate(addr, function (err, exact, inexact, response) {
+    if (!err) {
+      // TODO: We need to coerce the response into a functional address.
+      cb(err, formatGeoResponse(response.results[0]));
+    }
+  });
+
+  function formatGeoResponse(geores) {
+    var types = {
+      country: "country",
+      state: "administrative_area_level_1",
+      county: "administrative_area_level_2",
+      city: "locality",
+      street: "route",
+      number: "street_number",
+      postal_code: "postal_code"
+    };
+    var outp = {
+      singleline: geores.formatted_address,
+      lat: geores.geometry.location.lat,
+      lng: geores.geometry.location.lng,
+      place_id: geores.place_id
+    };
+
+    return _.mapValues(
+      _.merge(outp, _.mapValues(types, function (v) { return _.find(geores.address_components, { types: [v] }) })),
+      function (v) {
+        return v && (v.short_name || v);
+      }
+    );
+  }
 }
