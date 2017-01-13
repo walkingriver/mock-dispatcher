@@ -5,8 +5,13 @@ var restify = require('restify');
 var geolocate = require('ip-geolocate');
 var ip;
 
+// Persistent datastore with automatic loading
+var Datastore = require('nedb')
+  , db = new Datastore({ filename: config.app.data, autoload: true });
+
 var server = restify.createServer();
 server.use(restify.acceptParser(server.acceptable));
+server.use(restify.bodyParser({ mapParams: true }));
 
 server.use(function (req, res, next) {
   ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
@@ -18,7 +23,7 @@ server.use(function (req, res, next) {
 server.get('/', hello);
 server.get('/location', getLocation);
 server.get('/address/:phone', getProvisionedAddress);
-server.post('/address', provisionAddress);
+server.post('/address/:phone', provisionAddress);
 
 server.listen(config.port, function () {
   console.log('Listening on ', config.port);
@@ -54,10 +59,15 @@ function getLocation(req, res, next) {
 }
 
 function getProvisionedAddress(req, res, next) {
-  res.send({'status': 'Not working yet.'});
+  res.send({ 'status': 'Not working yet.' });
 }
 
 function provisionAddress(req, res, next) {
-  console.log(`Provisioning ${req.body}`);
+  var address = req.body;
+  console.log(`Provisioning ${address} for ${address.phone}.`);
+  address.phone = req.params.phone;
+  db.insert(address, function (err, newDoc) {
+    res.send(err || newDoc);
+  });
   next();
 }

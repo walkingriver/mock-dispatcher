@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "ip-geolocate": "^1.0.1",
+    "nedb": "^1.8.0",
     "request": "^2.79.0",
     "request-promise": "^4.1.1",
     "restify": "^4.3.0"

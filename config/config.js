@@ -6,7 +6,8 @@ var config = {
   development: {
     root: rootPath,
     app: {
-      name: 'mockDispatcher'
+      name: 'mockDispatcher',
+      data: path.join(rootPath, 'data-dev')
     },
     port: process.env.PORT || 3000,
   },
@@ -14,7 +15,8 @@ var config = {
   test: {
     root: rootPath,
     app: {
-      name: 'mockDispatcher'
+      name: 'mockDispatcher',
+      data: path.join(rootPath, 'data-test')
     },
     port: process.env.PORT || 3000,
   },
@@ -22,7 +24,8 @@ var config = {
   production: {
     root: rootPath,
     app: {
-      name: 'mockDispatcher'
+      name: 'mockDispatcher',
+      data: path.join(rootPath, 'data')
     },
     port: process.env.PORT || 3000,
   }
