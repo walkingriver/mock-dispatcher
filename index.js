@@ -59,7 +59,10 @@ function getLocation(req, res, next) {
 }
 
 function getProvisionedAddress(req, res, next) {
-  res.send({ 'status': 'Not working yet.' });
+  console.log(`Looking for the provisioned address ${req.params.phone}.`);
+  db.findOne({'phone': req.params.phone}, function(err, doc) {
+    res.send (err || doc);
+  });
 }
 
 function provisionAddress(req, res, next) {
@@ -69,5 +72,4 @@ function provisionAddress(req, res, next) {
   db.insert(address, function (err, newDoc) {
     res.send(err || newDoc);
   });
-  next();
 }
