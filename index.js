@@ -40,27 +40,42 @@ function hello(req, res, next) {
 }
 
 function getLocation(req, res, next) {
-  rp.get('https://api.ipify.org')
-    .then(function (response) {
-      geolocate.getLocation(response, function (err, location) {
-        if (err) {
-          // Error occurred, latency threshold hit, or IP address is invalid 
-          console.log(err);
-          res.err(err);
-        }
-        else {
-          // Success 
-          console.log(location);
-          res.send(location);
-        }
+  if (config.app.useIpService) {
+    rp.get('https://api.ipify.org')
+      .then(function (response) {
+        geolocate.getLocation(response, function (err, location) {
+          if (err) {
+            // Error occurred, latency threshold hit, or IP address is invalid 
+            console.log(err);
+            res.err(err);
+          }
+          else {
+            // Success 
+            console.log(location);
+            res.send(location);
+          }
+        });
+      })
+      .catch(function (err) {
+        // API call failed... 
+        console.log('Error: ', err);
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end(err);
       });
-    })
-    .catch(function (err) {
-      // API call failed... 
-      console.log('Error: ', err);
-      res.writeHead(400, { 'Content-Type': 'text/plain' });
-      res.end(err);
+  } else {
+    geolocate.getLocation(ip, function (err, location) {
+      if (err) {
+        // Error occurred, latency threshold hit, or IP address is invalid 
+        console.log(err);
+        res.err(err);
+      }
+      else {
+        // Success 
+        console.log(location);
+        res.send(location);
+      }
     });
+  }
 }
 
 function getProvisionedAddress(req, res, next) {

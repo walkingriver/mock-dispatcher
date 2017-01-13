@@ -7,7 +7,8 @@ var config = {
     root: rootPath,
     app: {
       name: 'mockDispatcher',
-      data: path.join(rootPath, 'data-dev')
+      data: path.join(rootPath, 'data-dev'),
+      useIpService: true
     },
     port: process.env.PORT || 3000,
   },
@@ -16,7 +17,8 @@ var config = {
     root: rootPath,
     app: {
       name: 'mockDispatcher',
-      data: path.join(rootPath, 'data-test')
+      data: path.join(rootPath, 'data-test'),
+      useIpService: true
     },
     port: process.env.PORT || 3000,
   },
@@ -25,7 +27,8 @@ var config = {
     root: rootPath,
     app: {
       name: 'mockDispatcher',
-      data: path.join(rootPath, 'data')
+      data: path.join(rootPath, 'data'),
+      useIpService: false
     },
     port: process.env.PORT || 3000,
   }
